@@ -10,6 +10,8 @@ const path_1 = __importDefault(require("path"));
 const mahasiswa_route_1 = __importDefault(require("./routes/mahasiswa.route"));
 const mahasiswa_db_route_1 = __importDefault(require("./routes/mahasiswa-db.route"));
 const prodi_route_1 = __importDefault(require("./routes/prodi.route"));
+const auth_route_1 = __importDefault(require("./routes/auth.route"));
+const auth_middleware_1 = require("./middlewares/auth.middleware");
 const app = (0, express_1.default)();
 /* =====================================
    Konfigurasi CORS
@@ -60,12 +62,14 @@ app.get("/about", (req, res) => {
 /* =====================================
    API Routes
 ===================================== */
+// Auth
+app.use("/api/auth", auth_route_1.default);
 // CRUD Mahasiswa (memory / dummy)
-app.use("/api/mahasiswa", mahasiswa_route_1.default);
+app.use("/api/mahasiswa", auth_middleware_1.authenticate, mahasiswa_route_1.default);
 // CRUD Mahasiswa Database MySQL
-app.use("/api/db/mahasiswa", mahasiswa_db_route_1.default);
+app.use("/api/db/mahasiswa", auth_middleware_1.authenticate, mahasiswa_db_route_1.default);
 // Master Data Prodi
-app.use("/api/prodi", prodi_route_1.default);
+app.use("/api/prodi", auth_middleware_1.authenticate, prodi_route_1.default);
 /* =====================================
    Route Tidak Ditemukan (404)
 ===================================== */

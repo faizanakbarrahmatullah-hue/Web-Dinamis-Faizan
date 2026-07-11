@@ -6,6 +6,8 @@ import path from "path";
 import mahasiswaRoutes from "./routes/mahasiswa.route";
 import mahasiswaDbRoutes from "./routes/mahasiswa-db.route";
 import prodiRoutes from "./routes/prodi.route";
+import authRoutes from "./routes/auth.route";
+import { authenticate } from "./middlewares/auth.middleware";
 
 const app = express();
 
@@ -73,14 +75,17 @@ app.get("/about", (req: Request, res: Response) => {
    API Routes
 ===================================== */
 
+// Auth
+app.use("/api/auth", authRoutes);
+
 // CRUD Mahasiswa (memory / dummy)
-app.use("/api/mahasiswa", mahasiswaRoutes);
+app.use("/api/mahasiswa", authenticate, mahasiswaRoutes);
 
 // CRUD Mahasiswa Database MySQL
-app.use("/api/db/mahasiswa", mahasiswaDbRoutes);
+app.use("/api/db/mahasiswa", authenticate, mahasiswaDbRoutes);
 
 // Master Data Prodi
-app.use("/api/prodi", prodiRoutes);
+app.use("/api/prodi", authenticate, prodiRoutes);
 
 /* =====================================
    Route Tidak Ditemukan (404)

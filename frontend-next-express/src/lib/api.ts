@@ -1,3 +1,5 @@
+import { getToken } from "./auth";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 const backendUrl = BACKEND_URL?.replace(/\/+$/, "") ?? "http://localhost:3000";
@@ -10,6 +12,21 @@ const BASE_URL = apiUrl.match(/\/api\/?$/)
   ? apiUrl
   : `${apiUrl}/api/db`;
 const PRODI_URL = `${backendUrl}/api/prodi`;
+
+function getAuthHeaders(isForm = false) {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+
+  if (!isForm) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+}
 
 
 async function parseErrorMessage(response: Response, defaultMessage: string) {
@@ -39,7 +56,9 @@ export async function getMahasiswa(params?: {
     if (params.limit) url.searchParams.set("limit", String(params.limit));
   }
 
-  const response = await fetch(url.toString());
+  const response = await fetch(url.toString(), {
+    headers: getAuthHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(await parseErrorMessage(response, "Gagal mengambil data mahasiswa."));
@@ -52,7 +71,9 @@ export async function getMahasiswa(params?: {
  * Mengambil seluruh data prodi
  */
 export async function getProdi() {
-  const response = await fetch(PRODI_URL);
+  const response = await fetch(PRODI_URL, {
+    headers: getAuthHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(await parseErrorMessage(response, "Gagal mengambil data prodi."));
@@ -90,10 +111,8 @@ export async function createMahasiswa(
   const response = await fetch(`${BASE_URL}/mahasiswa`, {
     method: "POST",
     headers: isForm
-      ? undefined
-      : {
-          "Content-Type": "application/json",
-        },
+      ? getAuthHeaders(true)
+      : getAuthHeaders(false),
     body,
   });
 
@@ -124,10 +143,8 @@ export async function updateMahasiswa(
   const response = await fetch(`${BASE_URL}/mahasiswa/${id}`, {
     method: "PUT",
     headers: isForm
-      ? undefined
-      : {
-          "Content-Type": "application/json",
-        },
+      ? getAuthHeaders(true)
+      : getAuthHeaders(false),
     body,
   });
 
@@ -144,6 +161,7 @@ export async function updateMahasiswa(
 export async function deleteMahasiswa(id: number) {
   const response = await fetch(`${BASE_URL}/mahasiswa/${id}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
   });
 
   if (!response.ok) {

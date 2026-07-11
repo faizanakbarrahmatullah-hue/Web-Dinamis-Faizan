@@ -12,8 +12,11 @@ import {
   deleteMahasiswa,
   getProdi,
 } from "@/lib/api";
+import { clearAuth, getUser } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
   const [data, setData] = useState<any[]>([]);
   const [prodiOptions, setProdiOptions] = useState<any[]>([]);
   const [editingMahasiswa, setEditingMahasiswa] = useState<any>(null);
@@ -28,6 +31,7 @@ export default function Page() {
   const [limit] = useState(10);
 
   const [totalPage, setTotalPage] = useState(1);
+  const user = getUser();
 
   // ===============================
   // Load Data Mahasiswa
@@ -161,116 +165,153 @@ export default function Page() {
     loadProdi();
   }, []);
 
+  function handleLogout() {
+    clearAuth();
+    router.replace("/login");
+  }
+
   return (
-    <div className="max-w-6xl mx-auto p-6">
-
-      <h1 className="text-3xl font-bold mb-6">
-        CRUD Mahasiswa
-      </h1>
-
-      {/* ========================= */}
-      {/* Search */}
-      {/* ========================= */}
-
-      <div className="flex flex-wrap gap-3 mb-6">
-
-        <input
-          type="text"
-          placeholder="Cari NIM atau Nama..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border rounded px-3 py-2 w-64"
-        />
-
-        <select
-          value={prodiId}
-          onChange={(e) => setProdiId(e.target.value)}
-          className="border rounded px-3 py-2"
-        >
-          <option value="">Semua Prodi</option>
-
-          {prodiOptions.map((item: any) => (
-            <option
-              key={item.id}
-              value={item.id}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-4xl">👨‍🎓</span>
+                <h1 className="text-4xl font-bold">Dashboard Mahasiswa</h1>
+              </div>
+              <p className="text-blue-100">Selamat datang, <span className="font-semibold">{user?.name || "Admin"}</span></p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95"
             >
-              {item.nama_prodi}
-            </option>
-          ))}
-        </select>
-
-        <button
-          onClick={handleSearch}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Cari
-        </button>
-
-        <button
-          onClick={handleReset}
-          className="bg-gray-500 text-white px-4 py-2 rounded"
-        >
-          Reset
-        </button>
-
+              🚪 Logout
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* ========================= */}
-      {/* Form */}
-      {/* ========================= */}
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Search & Filter Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6 border-t-4 border-blue-600">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🔍</span>
+            <h2 className="text-lg font-bold text-gray-800">Cari & Filter Data</h2>
+          </div>
 
-      <MahasiswaForm
-        onSubmit={handleSubmit}
-        onCancel={handleCancelEdit}
-        prodiOptions={prodiOptions}
-        initialData={editingMahasiswa}
-      />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Search Input */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">📋 Cari NIM atau Nama</label>
+              <input
+                type="text"
+                placeholder="Ketik NIM atau nama mahasiswa..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300"
+              />
+            </div>
 
-      {/* ========================= */}
-      {/* Loading */}
+            {/* Filter Prodi */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">🎓 Filter Program Studi</label>
+              <select
+                value={prodiId}
+                onChange={(e) => setProdiId(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300"
+              >
+                <option value="">Semua Program Studi</option>
 
-      {/* ========================= */}
-      {/* Loading */}
-      {/* ========================= */}
+                {prodiOptions.map((item: any) => (
+                  <option
+                    key={item.id}
+                    value={item.id}
+                  >
+                    {item.nama_prodi}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      {loading ? (
-        <p className="mt-6">Memuat data...</p>
-      ) : (
-        <MahasiswaTable
-          data={data}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+            {/* Buttons */}
+            <div className="flex gap-3 items-end">
+              <button
+                onClick={handleSearch}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                ✅ Cari
+              </button>
+
+              <button
+                onClick={handleReset}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                🔄 Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Section */}
+        <MahasiswaForm
+          onSubmit={handleSubmit}
+          onCancel={handleCancelEdit}
+          prodiOptions={prodiOptions}
+          initialData={editingMahasiswa}
         />
-      )}
 
-      {/* ========================= */}
-      {/* Pagination */}
-      {/* ========================= */}
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12 bg-white rounded-lg shadow-lg">
+            <div className="inline-block">
+              <div className="animate-spin text-4xl mb-4">⏳</div>
+              <p className="text-gray-600 font-semibold">Memuat data mahasiswa...</p>
+            </div>
+          </div>
+        )}
 
-      <div className="flex justify-center gap-3 mt-6">
+        {/* Table Section */}
+        {!loading && (
+          <>
+            <MahasiswaTable
+              data={data}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
 
-        <button
-          disabled={page <= 1}
-          onClick={() => setPage(page - 1)}
-          className="border px-4 py-2 rounded disabled:opacity-50"
-        >
-          Sebelumnya
-        </button>
+            {/* Pagination */}
+            {totalPage > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 bg-white rounded-lg shadow-lg p-6">
+                <button
+                  disabled={page <= 1}
+                  onClick={() => setPage(page - 1)}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+                >
+                  ⬅️ Sebelumnya
+                </button>
 
-        <span className="px-4 py-2">
-          Halaman {page} dari {totalPage}
-        </span>
+                <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold">
+                  <span>📄 Halaman</span>
+                  <span className="bg-blue-600 text-white px-3 py-1 rounded">{page}</span>
+                  <span>dari</span>
+                  <span className="bg-blue-600 text-white px-3 py-1 rounded">{totalPage}</span>
+                </div>
 
-        <button
-          disabled={page >= totalPage}
-          onClick={() => setPage(page + 1)}
-          className="border px-4 py-2 rounded disabled:opacity-50"
-        >
-          Berikutnya
-        </button>
-
+                <button
+                  disabled={page >= totalPage}
+                  onClick={() => setPage(page + 1)}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+                >
+                  Berikutnya ➡️
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
-
     </div>
   );
 }
